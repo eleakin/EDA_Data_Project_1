@@ -1,26 +1,22 @@
-## Data Processing
-if(!file.exists("exdata-data-household_power_consumption.zip")) {
-        temp <- tempfile()
-        download.file("http://d396qusza40orc.cloudfront.net/exdata%2Fdata%2Fhousehold_power_consumption.zip",temp)
-        file <- unzip(temp)
-        unlink(temp)
-        }
-power <- read.table(file, header=T, sep=";")
-power$Date <- as.Date(power$Date, format="%d/%m/%Y")
-df <- power[(power$Date=="2007-02-01") | (power$Date=="2007-02-02"),]
-df$Global_active_power <- as.numeric(as.character(df$Global_active_power))
-df$Global_reactive_power <- as.numeric(as.character(df$Global_reactive_power))
-df$Voltage <- as.numeric(as.character(df$Voltage))
-df <- transform(df, timestamp=as.POSIXct(paste(Date, Time)), "%d/%m/%Y %H:%M:%S")
-df$Sub_metering_1 <- as.numeric(as.character(df$Sub_metering_1))
-df$Sub_metering_2 <- as.numeric(as.character(df$Sub_metering_2))
-df$Sub_metering_3 <- as.numeric(as.character(df$Sub_metering_3))
+## Getting full dataset
+data_full <- read.csv("./Data/household_power_consumption.txt", header=T, sep=';', na.strings="?", 
+                      nrows=2075259, check.names=F, stringsAsFactors=F, comment.char="", quote='\"')
+data_full$Date <- as.Date(data_full$Date, format="%d/%m/%Y")
+
+## Subsetting the data
+data <- subset(data_full, subset=(Date >= "2007-02-01" & Date <= "2007-02-02"))
+rm(data_full)
+
+## Converting dates
+datetime <- paste(as.Date(data$Date), data$Time)
+data$Datetime <- as.POSIXct(datetime)
 
 ## Plot 1
-plot1 <- function() {
-        hist(df$Global_active_power, main = paste("Global Active Power"), col="red", xlab="Global Active Power (kilowatts)")
-        dev.copy(png, file="plot1.png", width=480, height=480)
-        dev.off()
-        cat("Plot1.png has been saved in", getwd())
-}
-plot1()
+hist(data$Global_active_power, main="Global Active Power", 
+     xlab="Global Active Power (kilowatts)", ylab="Frequency", col="Red")
+
+## Saving to file
+dev.copy(png, file="plot1.png", height=480, width=480)
+dev.off()
+
+
